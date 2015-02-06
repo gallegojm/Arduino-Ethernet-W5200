@@ -12,22 +12,36 @@
 
 #include <SPI.h>
 
+// Comment next line for use with W5100
+#define W5200
+
 #define SPI_CS 10
 
 #if defined(ARDUINO_ARCH_AVR)
-#define SPI_ETHERNET_SETTINGS SPISettings(4000000, MSBFIRST, SPI_MODE0)
+  #define SPI_ETHERNET_SETTINGS SPISettings(4000000, MSBFIRST, SPI_MODE0)
 #else
-#define SPI_ETHERNET_SETTINGS SPI_CS,SPISettings(4000000, MSBFIRST, SPI_MODE0)
+  #ifdef W5200
+    #define SPI_ETHERNET_SETTINGS SPI_CS,SPISettings(80000000, MSBFIRST, SPI_MODE0)
+  #else // W5100 //
+    #define SPI_ETHERNET_SETTINGS SPI_CS,SPISettings(4000000, MSBFIRST, SPI_MODE0)
+  #endif
 #endif
 
-#define MAX_SOCK_NUM 4
+#ifdef W5200
+  #define MAX_SOCK_NUM 8
+#else // W5100 //
+  #define MAX_SOCK_NUM 4
+#endif
 
 typedef uint8_t SOCKET;
 
-#define IDM_OR  0x8000
-#define IDM_AR0 0x8001
-#define IDM_AR1 0x8002
-#define IDM_DR  0x8003
+#ifndef W5200
+  #define IDM_OR  0x8000
+  #define IDM_AR0 0x8001
+  #define IDM_AR1 0x8002
+  #define IDM_DR  0x8003
+#endif
+
 /*
 class MR {
 public:
@@ -240,13 +254,17 @@ public:
   __GP_REGISTER8 (IMR,    0x0016);    // Interrupt Mask
   __GP_REGISTER16(RTR,    0x0017);    // Timeout address
   __GP_REGISTER8 (RCR,    0x0019);    // Retry count
+#ifndef W5200
   __GP_REGISTER8 (RMSR,   0x001A);    // Receive memory size
   __GP_REGISTER8 (TMSR,   0x001B);    // Transmit memory size
+#endif 
   __GP_REGISTER8 (PATR,   0x001C);    // Authentication type address in PPPoE mode
   __GP_REGISTER8 (PTIMER, 0x0028);    // PPP LCP Request Timer
   __GP_REGISTER8 (PMAGIC, 0x0029);    // PPP LCP Magic Number
+#ifndef W5200
   __GP_REGISTER_N(UIPR,   0x002A, 4); // Unreachable IP address in UDP mode
   __GP_REGISTER16(UPORT,  0x002E);    // Unreachable Port address in UDP mode
+#endif
   
 #undef __GP_REGISTER8
 #undef __GP_REGISTER16
@@ -260,7 +278,11 @@ private:
   static inline uint16_t readSn(SOCKET _s, uint16_t _addr, uint8_t *_buf, uint16_t len);
   static inline uint16_t writeSn(SOCKET _s, uint16_t _addr, uint8_t *_buf, uint16_t len);
 
+#ifdef W5200
+  static const uint16_t CH_BASE = 0x4000;
+#else // W5100 //
   static const uint16_t CH_BASE = 0x0400;
+#endif  
   static const uint16_t CH_SIZE = 0x0100;
 
 #define __SOCKET_REGISTER8(name, address)                    \
@@ -319,7 +341,8 @@ public:
 private:
   static const uint8_t  RST = 7; // Reset BIT
 
-  static const int SOCKETS = 4;
+  // W5100 // static const int SOCKETS = 4;
+  static const int SOCKETS = MAX_SOCK_NUM;
   static const uint16_t SMASK = 0x07FF; // Tx buffer MASK
   static const uint16_t RMASK = 0x07FF; // Rx buffer MASK
 public:

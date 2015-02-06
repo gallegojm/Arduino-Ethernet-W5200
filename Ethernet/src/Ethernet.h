@@ -2,13 +2,13 @@
 #define ethernet_h
 
 #include <inttypes.h>
-//#include "w5100.h"
+#include "utility/w5100.h"  // W5100 //
 #include "IPAddress.h"
 #include "EthernetClient.h"
 #include "EthernetServer.h"
 #include "Dhcp.h"
 
-#define MAX_SOCK_NUM 4
+// W5100 // #define MAX_SOCK_NUM 4
 
 class EthernetClass {
 private:
